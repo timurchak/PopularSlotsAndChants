@@ -46,3 +46,6 @@ python3 scripts/install.py
 - [ ] Add addon icon
 - [ ] Add minimup button
 - [ ] Think about auto update every day/week
+- [ ] Add talents
+- [ ] Add export stats to BGC
+- [ ] Add all for raid
