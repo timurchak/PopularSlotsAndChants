@@ -42,3 +42,7 @@ python3 scripts/install.py
 # Build release ZIP
 ./build-release.sh 0.1.0
 ```
+## TODO
+- [ ] Add addon icon
+- [ ] Add minimup button
+- [ ] Think about auto update every day/week
