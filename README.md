@@ -1,6 +1,6 @@
 # Popular Slots & Chants
 
-A World of Warcraft addon that displays popular gear, enchants, gems, and consumables from [Archon.gg](https://www.archon.gg) Mythic+ data — right inside the game.
+A World of Warcraft addon that displays popular gear, enchants, gems, consumables, talents, and stat priorities from [Archon.gg](https://www.archon.gg) Mythic+ data — right inside the game.
 
 ## Features
 
@@ -8,6 +8,9 @@ A World of Warcraft addon that displays popular gear, enchants, gems, and consum
 - **Enchants** — Top 3 enchants per slot (weapon, rings, head, shoulders, chest, legs, feet)
 - **Gems** — Top 3 epic gems and regular gems
 - **Consumables** — Most popular flask, potions, and weapon buffs
+- **Talents** — Top 3 talent builds with export strings, hero tree info, and one-click copy
+- **Stats** — Stat priority with visual bars and weight values
+- **Export to BGC** — Send stat weights directly to [BetterGearCompare](https://github.com/timurchak/BetterGearCompare) as an "Archon M+" profile
 - **All 40 specs** supported with auto-detection of your current specialization
 - **Difficulty selector** — View items at Veteran, Champion, Hero, or Myth upgrade levels
 - **Shift+Click** to link any item in chat
@@ -40,12 +43,12 @@ python3 scripts/generate_lua.py
 python3 scripts/install.py
 
 # Build release ZIP
-./build-release.sh 0.1.0
+./build-release.sh 0.2.0
 ```
 ## TODO
 - [X] Add addon icon
-- [ ] Add minimup button
+- [X] Add talents
+- [X] Add export stats to BGC
+- [ ] Add minimap button
 - [ ] Think about auto update every day/week
-- [ ] Add talents
-- [ ] Add export stats to BGC
 - [ ] Add all for raid

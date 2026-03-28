@@ -14,7 +14,10 @@ INCLUDE = [
     "PopularSlotsAndChants_Localization.lua",
     "PopularSlotsAndChants_Data.lua",
     "PopularSlotsAndChants_UI.lua",
+    "PopularSlotsAndChants_MinimapButton.lua",
+    "icon.tga",
     "Locales",
+    "Libs",
 ]
 
 

@@ -7,6 +7,7 @@ local defaults = {
   selectedTrackIndex = 4,
   selectedTab = "gear",
   windowPoint = nil,
+  minimapAngle = 225,
 }
 
 local frame = CreateFrame("Frame")

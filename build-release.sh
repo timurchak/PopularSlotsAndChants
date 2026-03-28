@@ -40,6 +40,8 @@ FILES=(
   PopularSlotsAndChants_Localization.lua
   PopularSlotsAndChants_Data.lua
   PopularSlotsAndChants_UI.lua
+  PopularSlotsAndChants_MinimapButton.lua
+  icon.tga
 )
 
 for file in "${FILES[@]}"; do

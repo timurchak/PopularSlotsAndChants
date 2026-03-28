@@ -1,13 +1,19 @@
-## Interface: 120001
+## Interface: 120001, 120005, 120000
 ## Title: Popular Slots & Chants
 ## Notes: Shows popular gear, enchants, gems and consumables from Archon.gg
 ## Author: timurchak
-## Version: 0.1.0
+## Version: 0.2.0
 ## SavedVariables: PopularSlotsAndChantsDB
-## IconTexture: Interface\Icons\INV_Misc_Book_11
+## IconTexture: Interface\AddOns\PopularSlotsAndChants\icon
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 
 PopularSlotsAndChants.lua
 PopularSlotsAndChants_Localization.lua
 Locales\Localization.xml
 PopularSlotsAndChants_Data.lua
 PopularSlotsAndChants_UI.lua
+PopularSlotsAndChants_MinimapButton.lua
