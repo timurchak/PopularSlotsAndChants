@@ -2,7 +2,7 @@
 ## Title: Popular Slots & Chants
 ## Notes: Shows popular gear, enchants, gems and consumables from Archon.gg
 ## Author: timurchak
-## Version: 0.3.0
+## Version: 0.3.2
 ## SavedVariables: PopularSlotsAndChantsDB
 ## IconTexture: Interface\AddOns\PopularSlotsAndChants\icon
 
