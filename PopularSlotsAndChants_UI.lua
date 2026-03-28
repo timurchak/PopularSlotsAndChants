@@ -54,6 +54,8 @@ local TABS = {
   { key = "enchants",    label = "TAB_ENCHANTS" },
   { key = "gems",        label = "TAB_GEMS" },
   { key = "consumables", label = "TAB_CONSUMABLES" },
+  { key = "talents",     label = "TAB_TALENTS" },
+  { key = "stats",       label = "TAB_STATS" },
 }
 
 local ROW_HEIGHT = 28
@@ -75,8 +77,31 @@ local selectedTab = "gear"
 
 local rowPool = {}
 local headerPool = {}
+local talentRowPool = {}
+local statRowPool = {}
 local pendingItems = {}
 local tabButtons = {}
+local exportBGCBtn
+
+-- Copy popup dialog
+StaticPopupDialogs["PSC_COPY_EXPORT"] = {
+  text = "Copy talent export string:",
+  button1 = CLOSE or "Close",
+  hasEditBox = true,
+  editBoxWidth = 350,
+  OnShow = function(self)
+    self.EditBox:SetText(self.data or "")
+    self.EditBox:SetFocus()
+    self.EditBox:HighlightText()
+  end,
+  EditBoxOnEscapePressed = function(self)
+    self:GetParent():Hide()
+  end,
+  timeout = 0,
+  whileDead = true,
+  hideOnEscape = true,
+  preferredIndex = 3,
+}
 
 -- Helpers
 
@@ -214,6 +239,9 @@ end
 local function HideAll()
   for _, row in pairs(rowPool) do row:Hide() end
   for _, header in pairs(headerPool) do header:Hide() end
+  for _, row in pairs(talentRowPool) do row:Hide() end
+  for _, row in pairs(statRowPool) do row:Hide() end
+  if exportBGCBtn then exportBGCBtn:Hide() end
 end
 
 local function SetupItemRow(row, itemID, popularity, useTrack)
@@ -405,6 +433,325 @@ local function PopulateConsumables(content, contentWidth, specData)
   return yOffset
 end
 
+-- Talent row: header + title + hero tree + popularity + Copy + Apply buttons
+
+local TALENT_ROW_HEIGHT = 70
+
+local function ShowCopyPopup(exportCode)
+  StaticPopup_Show("PSC_COPY_EXPORT", nil, nil, exportCode)
+end
+
+local function GetOrCreateTalentRow(parent, index)
+  if talentRowPool[index] then return talentRowPool[index] end
+
+  local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+  row:SetHeight(TALENT_ROW_HEIGHT)
+  row:EnableMouse(true)
+  row:SetBackdrop({ bgFile = "Interface/Buttons/WHITE8X8" })
+  row:SetBackdropColor(0.1, 0.1, 0.15, 0.5)
+
+  local titleText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  titleText:SetPoint("TOPLEFT", row, "TOPLEFT", 8, -6)
+  titleText:SetTextColor(1, 1, 1)
+  row.titleText = titleText
+
+  local heroText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  heroText:SetPoint("TOPLEFT", titleText, "BOTTOMLEFT", 0, -2)
+  heroText:SetTextColor(0.35, 0.82, 1)
+  row.heroText = heroText
+
+  local popText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  popText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, -6)
+  popText:SetJustifyH("RIGHT")
+  popText:SetTextColor(0.7, 0.7, 0.7)
+  row.popText = popText
+
+  -- Copy button
+  local copyBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
+  copyBtn:SetSize(70, 22)
+  copyBtn:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 8, 6)
+  copyBtn:SetBackdrop({
+    bgFile = "Interface/Buttons/WHITE8X8",
+    edgeFile = "Interface/Buttons/WHITE8X8",
+    edgeSize = 1,
+  })
+  copyBtn:SetBackdropColor(0.15, 0.25, 0.35, 1)
+  copyBtn:SetBackdropBorderColor(0.35, 0.82, 1, 0.6)
+  local copyText = copyBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  copyText:SetPoint("CENTER")
+  copyText:SetText(L["COPY_EXPORT"])
+  copyText:SetTextColor(0.35, 0.82, 1)
+  copyBtn:SetScript("OnEnter", function(self)
+    self:SetBackdropColor(0.2, 0.35, 0.5, 1)
+  end)
+  copyBtn:SetScript("OnLeave", function(self)
+    self:SetBackdropColor(0.15, 0.25, 0.35, 1)
+  end)
+  row.copyBtn = copyBtn
+
+  -- Apply button → Open Talents button
+  local openBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
+  openBtn:SetSize(90, 22)
+  openBtn:SetPoint("LEFT", copyBtn, "RIGHT", 6, 0)
+  openBtn:SetBackdrop({
+    bgFile = "Interface/Buttons/WHITE8X8",
+    edgeFile = "Interface/Buttons/WHITE8X8",
+    edgeSize = 1,
+  })
+  openBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
+  openBtn:SetBackdropBorderColor(0.2, 0.8, 0.2, 0.6)
+  local openText = openBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  openText:SetPoint("CENTER")
+  openText:SetText(L["OPEN_TALENTS"])
+  openText:SetTextColor(0.2, 1, 0.2)
+  openBtn:SetScript("OnEnter", function(self)
+    self:SetBackdropColor(0.2, 0.5, 0.2, 1)
+  end)
+  openBtn:SetScript("OnLeave", function(self)
+    self:SetBackdropColor(0.15, 0.35, 0.15, 1)
+  end)
+  row.openBtn = openBtn
+
+  talentRowPool[index] = row
+  return row
+end
+
+local function PopulateTalents(content, contentWidth, specData)
+  local yOffset = 0
+  local headerIndex = 0
+
+  if not specData.talents or not specData.talents.builds then
+    return yOffset
+  end
+
+  -- Hero Trees summary
+  if specData.talents.heroTrees and #specData.talents.heroTrees > 0 then
+    headerIndex = headerIndex + 1
+    local header = GetOrCreateHeader(content, headerIndex)
+    header:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
+    header:SetPoint("RIGHT", content, "RIGHT", 0, 0)
+    local names = {}
+    for _, ht in ipairs(specData.talents.heroTrees) do
+      table.insert(names, ht.name .. " (#" .. ht.rank .. ")")
+    end
+    header.text:SetText("Hero Trees: " .. table.concat(names, ", "))
+    header:Show()
+    yOffset = yOffset + HEADER_HEIGHT
+  end
+
+  -- Builds
+  headerIndex = headerIndex + 1
+  local header = GetOrCreateHeader(content, headerIndex)
+  header:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
+  header:SetPoint("RIGHT", content, "RIGHT", 0, 0)
+  header.text:SetText("Talent Builds")
+  header:Show()
+  yOffset = yOffset + HEADER_HEIGHT
+
+  for i, build in ipairs(specData.talents.builds) do
+    local row = GetOrCreateTalentRow(content, i)
+    row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
+    row:SetPoint("RIGHT", content, "RIGHT", 0, 0)
+
+    local titleStr = build.title or ("Build #" .. i)
+    row.titleText:SetText(titleStr)
+
+    if build.heroTree and build.heroTree ~= "" then
+      row.heroText:SetText(string.format(L["HERO_TREE"], build.heroTree))
+      row.heroText:Show()
+    else
+      row.heroText:Hide()
+    end
+
+    row.popText:SetText(string.format(L["POPULARITY"], build.popularity))
+
+    local exportCode = build.exportCode
+    row.copyBtn:SetScript("OnClick", function()
+      ShowCopyPopup(exportCode)
+    end)
+
+    row.openBtn:SetScript("OnClick", function()
+      if not PlayerSpellsFrame or not PlayerSpellsFrame:IsShown() then
+        TogglePlayerSpellsFrame(PlayerSpellsUtil.FrameTabs.ClassTalents)
+      end
+    end)
+
+    row:Show()
+    yOffset = yOffset + TALENT_ROW_HEIGHT + 4
+  end
+
+  return yOffset
+end
+
+-- Stat name → BGC weight key mapping
+local STAT_KEY_MAP = {
+  ["Intellect"] = "ITEM_MOD_INTELLECT_SHORT",
+  ["Strength"]  = "ITEM_MOD_STRENGTH_SHORT",
+  ["Agility"]   = "ITEM_MOD_AGILITY_SHORT",
+  ["Stamina"]   = "ITEM_MOD_STAMINA_SHORT",
+  ["Crit"]      = "ITEM_MOD_CRIT_RATING_SHORT",
+  ["Haste"]     = "ITEM_MOD_HASTE_RATING_SHORT",
+  ["Mastery"]   = "ITEM_MOD_MASTERY_RATING_SHORT",
+  ["Vers"]      = "ITEM_MOD_VERSATILITY",
+}
+
+-- Stat bar colors by priority order
+local STAT_BAR_COLORS = {
+  { 0.35, 0.82, 1.0 },   -- 1st: accent blue
+  { 0.30, 0.70, 0.90 },  -- 2nd
+  { 0.25, 0.58, 0.78 },  -- 3rd
+  { 0.20, 0.46, 0.66 },  -- 4th
+  { 0.15, 0.34, 0.54 },  -- 5th
+}
+
+local STAT_ROW_HEIGHT = 32
+
+local function GetOrCreateStatRow(parent, index)
+  if statRowPool[index] then return statRowPool[index] end
+
+  local row = CreateFrame("Frame", nil, parent)
+  row:SetHeight(STAT_ROW_HEIGHT)
+
+  local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  nameText:SetPoint("LEFT", row, "LEFT", 8, 0)
+  nameText:SetWidth(80)
+  nameText:SetJustifyH("LEFT")
+  row.nameText = nameText
+
+  local barBg = row:CreateTexture(nil, "BACKGROUND")
+  barBg:SetPoint("LEFT", nameText, "RIGHT", 8, 0)
+  barBg:SetHeight(16)
+  barBg:SetWidth(240)
+  barBg:SetColorTexture(0.1, 0.1, 0.15, 1)
+  row.barBg = barBg
+
+  local bar = row:CreateTexture(nil, "ARTWORK")
+  bar:SetPoint("LEFT", barBg, "LEFT", 0, 0)
+  bar:SetHeight(16)
+  row.bar = bar
+
+  local valueText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  valueText:SetPoint("LEFT", barBg, "RIGHT", 8, 0)
+  valueText:SetWidth(50)
+  valueText:SetJustifyH("LEFT")
+  row.valueText = valueText
+
+  statRowPool[index] = row
+  return row
+end
+
+local function ConvertArchonWeights(statsData)
+  local weights = {}
+  for _, stat in ipairs(statsData) do
+    local bgcKey = STAT_KEY_MAP[stat.name]
+    if bgcKey then
+      if stat.order == 1 then
+        weights[bgcKey] = 10
+      else
+        weights[bgcKey] = stat.value / 100
+      end
+    end
+  end
+  return weights
+end
+
+local function PopulateStats(content, contentWidth, specData)
+  local yOffset = 0
+  local headerIndex = 0
+
+  if not specData.stats or #specData.stats == 0 then
+    return yOffset
+  end
+
+  -- Header
+  headerIndex = headerIndex + 1
+  local header = GetOrCreateHeader(content, headerIndex)
+  header:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
+  header:SetPoint("RIGHT", content, "RIGHT", 0, 0)
+  header.text:SetText("Stat Priority")
+  header:Show()
+  yOffset = yOffset + HEADER_HEIGHT
+
+  -- Find max value for bar scaling
+  local maxValue = 0
+  for _, stat in ipairs(specData.stats) do
+    local w = stat.order == 1 and 1000 or stat.value
+    if w > maxValue then maxValue = w end
+  end
+  if maxValue == 0 then maxValue = 1 end
+
+  -- Stat rows
+  for i, stat in ipairs(specData.stats) do
+    local row = GetOrCreateStatRow(content, i)
+    row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
+    row:SetPoint("RIGHT", content, "RIGHT", 0, 0)
+
+    row.nameText:SetText(stat.name)
+
+    local weight
+    if stat.order == 1 then
+      weight = 10
+    else
+      weight = stat.value / 100
+    end
+
+    local barFraction = (stat.order == 1 and 1000 or stat.value) / maxValue
+    local barMaxWidth = 240
+    row.bar:SetWidth(math.max(barFraction * barMaxWidth, 2))
+
+    local color = STAT_BAR_COLORS[math.min(i, #STAT_BAR_COLORS)]
+    row.bar:SetColorTexture(color[1], color[2], color[3], 1)
+    row.nameText:SetTextColor(color[1], color[2], color[3])
+
+    row.valueText:SetText(string.format("%.2f", weight))
+
+    row:Show()
+    yOffset = yOffset + STAT_ROW_HEIGHT
+  end
+
+  -- Export to BGC button
+  if not exportBGCBtn then
+    exportBGCBtn = CreateFrame("Button", nil, content, "BackdropTemplate")
+    exportBGCBtn:SetSize(160, 26)
+    exportBGCBtn:SetBackdrop({
+      bgFile = "Interface/Buttons/WHITE8X8",
+      edgeFile = "Interface/Buttons/WHITE8X8",
+      edgeSize = 1,
+    })
+    exportBGCBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
+    exportBGCBtn:SetBackdropBorderColor(0.2, 0.8, 0.2, 0.6)
+    local btnText = exportBGCBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    btnText:SetPoint("CENTER")
+    btnText:SetText(L["EXPORT_TO_BGC"])
+    btnText:SetTextColor(0.2, 1, 0.2)
+    exportBGCBtn.text = btnText
+    exportBGCBtn:SetScript("OnEnter", function(self)
+      self:SetBackdropColor(0.2, 0.5, 0.2, 1)
+    end)
+    exportBGCBtn:SetScript("OnLeave", function(self)
+      self:SetBackdropColor(0.15, 0.35, 0.15, 1)
+    end)
+  end
+
+  yOffset = yOffset + 8
+  exportBGCBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 8, -yOffset)
+  exportBGCBtn:SetScript("OnClick", function()
+    local bgc = _G.BetterGearCompare
+    if not bgc or not bgc.ImportWeights then
+      print("|cffff5555" .. L["EXPORT_NO_BGC"] .. "|r")
+      return
+    end
+    local weights = ConvertArchonWeights(specData.stats)
+    local profileName = "Archon M+"
+    bgc:ImportWeights(profileName, weights)
+    print("|cff59b8ff" .. string.format(L["EXPORT_SUCCESS"], profileName) .. "|r")
+  end)
+  exportBGCBtn:Show()
+  yOffset = yOffset + 34
+
+  return yOffset
+end
+
 local function PopulateContent()
   if not mainFrame or not mainFrame:IsShown() then return end
 
@@ -430,6 +777,10 @@ local function PopulateContent()
     yOffset = PopulateGems(content, contentWidth, specData)
   elseif selectedTab == "consumables" then
     yOffset = PopulateConsumables(content, contentWidth, specData)
+  elseif selectedTab == "talents" then
+    yOffset = PopulateTalents(content, contentWidth, specData)
+  elseif selectedTab == "stats" then
+    yOffset = PopulateStats(content, contentWidth, specData)
   end
 
   content:SetHeight(math.max(yOffset, 1))

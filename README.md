@@ -43,7 +43,7 @@ python3 scripts/install.py
 ./build-release.sh 0.1.0
 ```
 ## TODO
-- [ ] Add addon icon
+- [X] Add addon icon
 - [ ] Add minimup button
 - [ ] Think about auto update every day/week
 - [ ] Add talents

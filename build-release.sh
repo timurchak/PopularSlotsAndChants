@@ -27,7 +27,8 @@ if [[ ! -f "$DATA_LUA" ]]; then
 fi
 
 if [[ -z "$VERSION" ]]; then
-  VERSION=$(grep -oP '## Version:\s*\K.+' "$TOC_PATH" | tr -d '[:space:]' || echo "dev")
+  VERSION=$(sed -n 's/^## Version:[[:space:]]*//p' "$TOC_PATH" | tr -d '[:space:]')
+  VERSION="${VERSION:-dev}"
 fi
 
 rm -rf "$RELEASE_ROOT"

@@ -15,6 +15,8 @@ from archon_common import SPEC_ID_BY_SLUG, format_lua_table
 from fetch_archon_consumables import fetch_consumables
 from fetch_archon_enchants import fetch_enchants_and_gems
 from fetch_archon_gear import fetch_gear
+from fetch_archon_stats import fetch_stats
+from fetch_archon_talents import fetch_talents
 
 DEFAULT_OUTPUT = Path(__file__).resolve().parent.parent / "PopularSlotsAndChants_Data.lua"
 REQUEST_DELAY = 0.5  # seconds between HTTP requests
@@ -63,6 +65,12 @@ def main() -> int:
 
             consumables = fetch_consumables(spec_slug, class_slug)
             time.sleep(REQUEST_DELAY)
+
+            talents = fetch_talents(spec_slug, class_slug)
+            time.sleep(REQUEST_DELAY)
+
+            stats = fetch_stats(spec_slug, class_slug)
+            time.sleep(REQUEST_DELAY)
         except Exception as e:
             print(f"  ERROR: {e}", file=sys.stderr)
             continue
@@ -76,11 +84,15 @@ def main() -> int:
             "epicGems": enchants_data["epicGems"],
             "gems": enchants_data["gems"],
             "consumables": consumables,
+            "talents": talents,
+            "stats": stats,
         }
         spec_ids[spec_id] = slug
         print(f"  OK: {len(gear)} gear slots, {len(enchants_data['enchants'])} enchant slots, "
               f"{len(enchants_data['epicGems'])} epic gems, {len(enchants_data['gems'])} gems, "
-              f"{len(consumables)} consumables")
+              f"{len(consumables)} consumables, "
+              f"{len(talents.get('builds', []))} talent builds, "
+              f"{len(stats)} stats")
 
     dataset = {
         "generatedAtUtc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
