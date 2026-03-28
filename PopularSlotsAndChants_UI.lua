@@ -742,7 +742,11 @@ local function PopulateStats(content, contentWidth, specData)
       return
     end
     local weights = ConvertArchonWeights(specData.stats)
+    local _, specName, _, _, _, className = GetSpecializationInfoByID(selectedSpecID)
     local profileName = "Archon M+"
+    if className and specName then
+      profileName = profileName .. " - " .. className .. " - " .. specName
+    end
     bgc:ImportWeights(profileName, weights)
     print("|cff59b8ff" .. string.format(L["EXPORT_SUCCESS"], profileName) .. "|r")
   end)
