@@ -12,6 +12,8 @@ ignore:
   - .github
   - .gitignore
   - README.md
+  - CURSE.md
   - .pkgmeta
   - Image.png
   - scripts
+  - build-release.sh

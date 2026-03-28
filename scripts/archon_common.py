@@ -99,10 +99,14 @@ def parse_icon(markup: str) -> dict[str, Any]:
     name_m = re.search(r">([^<>{]+)</(?:GearIcon|ItemIcon|SpellIcon)>", markup)
     if not name_m:
         name_m = re.search(r"&nbsp;([^<]+)</", markup)
-    return {
+    is_spell = bool(re.search(r"<SpellIcon\b", markup)) or bool(re.search(r"\bisAbility\b", markup))
+    result: dict[str, Any] = {
         "id": int(item_id_m.group(1)) if item_id_m else 0,
         "name": name_m.group(1).strip() if name_m else "Unknown",
     }
+    if is_spell:
+        result["isSpell"] = True
+    return result
 
 
 def parse_popularity(markup: str) -> float:

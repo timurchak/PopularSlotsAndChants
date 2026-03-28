@@ -27,7 +27,10 @@ def fetch_consumables(spec_slug: str, class_slug: str, mode: str = "mythicplus")
             category = item.get("slotLabel", "Unknown")
             parsed = parse_icon(item.get("itemMarkdown", ""))
             pop = parse_popularity(item.get("popularityMarkdown", ""))
-            result[category] = {"id": parsed["id"], "name": parsed["name"], "popularity": pop}
+            entry = {"id": parsed["id"], "name": parsed["name"], "popularity": pop}
+            if parsed.get("isSpell"):
+                entry["isSpell"] = True
+            result[category] = entry
 
     return result
 

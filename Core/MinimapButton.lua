@@ -9,7 +9,7 @@ local ADDON_KEY = "PopularSlotsAndChants"
 local minimapObject = LDB:NewDataObject(ADDON_KEY, {
   type = "launcher",
   text = "Popular Slots & Chants",
-  icon = "Interface\\AddOns\\PopularSlotsAndChants\\icon",
+  icon = "Interface\\AddOns\\PopularSlotsAndChants\\Media\\icon",
 
   OnClick = function(_, button)
     if button == "LeftButton" then

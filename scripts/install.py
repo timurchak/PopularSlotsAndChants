@@ -11,11 +11,9 @@ WOW_ADDONS_DIR = Path("/Applications/World of Warcraft/_retail_/Interface/AddOns
 INCLUDE = [
     "PopularSlotsAndChants.toc",
     "PopularSlotsAndChants.lua",
-    "PopularSlotsAndChants_Localization.lua",
     "PopularSlotsAndChants_Data.lua",
-    "PopularSlotsAndChants_UI.lua",
-    "PopularSlotsAndChants_MinimapButton.lua",
-    "icon.tga",
+    "Media",
+    "Core",
     "Locales",
     "Libs",
 ]
