@@ -14,9 +14,9 @@ from archon_common import fetch_archon_page, get_slot_name, parse_icon, parse_po
 TOP_N = 3
 
 
-def fetch_enchants_and_gems(spec_slug: str, class_slug: str) -> dict:
+def fetch_enchants_and_gems(spec_slug: str, class_slug: str, mode: str = "mythicplus") -> dict:
     """Return enchants by slot, epic gems, and gems."""
-    sections = fetch_archon_page(spec_slug, class_slug, "enchants-and-gems")
+    sections = fetch_archon_page(spec_slug, class_slug, "enchants-and-gems", mode)
 
     result = {"enchants": {}, "epicGems": [], "gems": []}
 

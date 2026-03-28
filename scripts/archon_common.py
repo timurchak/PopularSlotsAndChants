@@ -54,15 +54,21 @@ SPEC_ID_BY_SLUG = {
 
 ARCHON_BASE = "https://www.archon.gg/wow/builds"
 
+GAME_MODES = {
+    "mythicplus": {"path": "mythic-plus", "suffix": "10/all-dungeons/this-week"},
+    "raid":       {"path": "raid",        "suffix": "mythic/all-bosses"},
+}
 
-def archon_url(spec_slug: str, class_slug: str, page_type: str) -> str:
+
+def archon_url(spec_slug: str, class_slug: str, page_type: str, mode: str = "mythicplus") -> str:
     """Build an Archon.gg URL. Archon uses {spec}/{class} order."""
-    return f"{ARCHON_BASE}/{spec_slug}/{class_slug}/mythic-plus/{page_type}/10/all-dungeons/this-week"
+    m = GAME_MODES[mode]
+    return f"{ARCHON_BASE}/{spec_slug}/{class_slug}/{m['path']}/{page_type}/{m['suffix']}"
 
 
-def fetch_archon_page(spec_slug: str, class_slug: str, page_type: str) -> list[dict]:
+def fetch_archon_page(spec_slug: str, class_slug: str, page_type: str, mode: str = "mythicplus") -> list[dict]:
     """Fetch an Archon.gg page and return its sections from __NEXT_DATA__."""
-    url = archon_url(spec_slug, class_slug, page_type)
+    url = archon_url(spec_slug, class_slug, page_type, mode)
     result = subprocess.run(
         [
             "curl", "-s",

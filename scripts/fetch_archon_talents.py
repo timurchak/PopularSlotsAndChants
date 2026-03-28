@@ -11,14 +11,14 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from archon_common import ARCHON_BASE, parse_popularity
+from archon_common import ARCHON_BASE, archon_url, parse_popularity
 
 TOP_N = 3
 
 
-def fetch_talents(spec_slug: str, class_slug: str) -> dict:
+def fetch_talents(spec_slug: str, class_slug: str, mode: str = "mythicplus") -> dict:
     """Return talent builds with export strings and hero tree info."""
-    url = f"{ARCHON_BASE}/{spec_slug}/{class_slug}/mythic-plus/talents/10/all-dungeons/this-week"
+    url = archon_url(spec_slug, class_slug, "talents", mode)
     proc = subprocess.run(
         [
             "curl", "-s",

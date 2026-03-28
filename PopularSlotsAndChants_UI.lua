@@ -62,7 +62,7 @@ local ROW_HEIGHT = 28
 local HEADER_HEIGHT = 22
 local ICON_SIZE = 24
 local FRAME_WIDTH = 450
-local FRAME_HEIGHT = 600
+local FRAME_HEIGHT = 630
 
 local SPEC_NAMES = {}
 
@@ -74,6 +74,7 @@ local tierDropdown
 local selectedSpecID
 local selectedTrackIndex
 local selectedTab = "gear"
+local selectedMode = "mythicplus"
 
 local rowPool = {}
 local headerPool = {}
@@ -81,6 +82,7 @@ local talentRowPool = {}
 local statRowPool = {}
 local pendingItems = {}
 local tabButtons = {}
+local modeButtons = {}
 local exportBGCBtn
 
 -- Copy popup dialog
@@ -743,7 +745,8 @@ local function PopulateStats(content, contentWidth, specData)
     end
     local weights = ConvertArchonWeights(specData.stats)
     local _, specName, _, _, _, className = GetSpecializationInfoByID(selectedSpecID)
-    local profileName = "Archon M+"
+    local modeLabel = selectedMode == "raid" and "Raid" or "M+"
+    local profileName = "Archon " .. modeLabel
     if className and specName then
       profileName = profileName .. " - " .. className .. " - " .. specName
     end
@@ -766,7 +769,8 @@ local function PopulateContent()
   if not data or not data.specs then return end
 
   local slug = data.specIDs and data.specIDs[selectedSpecID]
-  local specData = slug and data.specs[slug]
+  local specEntry = slug and data.specs[slug]
+  local specData = specEntry and specEntry[selectedMode]
   if not specData then return end
 
   local content = scrollArea.content
@@ -794,6 +798,34 @@ local function PopulateContent()
       scrollArea.UpdateScrollBar()
     end
   end)
+end
+
+-- Mode switching (M+ / Raid)
+
+local MODE_BUTTONS = {
+  { key = "mythicplus", label = "MODE_MYTHICPLUS" },
+  { key = "raid",       label = "MODE_RAID" },
+}
+
+local function UpdateModeButtons()
+  for _, btn in ipairs(modeButtons) do
+    if btn.modeKey == selectedMode then
+      btn:SetBackdropColor(0.20, 0.30, 0.45, 1)
+      btn:SetBackdropBorderColor(0.35, 0.82, 1, 1)
+      btn.text:SetTextColor(0.35, 0.82, 1)
+    else
+      btn:SetBackdropColor(0.06, 0.08, 0.12, 0.85)
+      btn:SetBackdropBorderColor(0.2, 0.2, 0.3, 0.6)
+      btn.text:SetTextColor(0.5, 0.5, 0.5)
+    end
+  end
+end
+
+local function SelectMode(modeKey)
+  selectedMode = modeKey
+  if ns.db then ns.db.selectedMode = modeKey end
+  UpdateModeButtons()
+  PopulateContent()
 end
 
 -- Tab switching
@@ -1002,8 +1034,43 @@ local function CreateMainFrame()
     end
   end)
 
+  -- Mode buttons (M+ / Raid)
+  local modeY = -64
+  local modeWidth = math.floor((FRAME_WIDTH - 20) / #MODE_BUTTONS)
+  for i, mode in ipairs(MODE_BUTTONS) do
+    local btn = CreateFrame("Button", nil, f, "BackdropTemplate")
+    btn:SetSize(modeWidth - 4, 26)
+    btn:SetPoint("TOPLEFT", f, "TOPLEFT", 10 + (i - 1) * modeWidth, modeY)
+    btn:SetBackdrop({
+      bgFile = "Interface/Buttons/WHITE8X8",
+      edgeFile = "Interface/Buttons/WHITE8X8",
+      edgeSize = 1,
+    })
+    btn.modeKey = mode.key
+
+    local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    text:SetPoint("CENTER")
+    text:SetText(L[mode.label])
+    btn.text = text
+
+    btn:SetScript("OnClick", function()
+      SelectMode(mode.key)
+    end)
+
+    btn:SetScript("OnEnter", function(self)
+      if self.modeKey ~= selectedMode then
+        self:SetBackdropColor(0.12, 0.18, 0.28, 1)
+      end
+    end)
+    btn:SetScript("OnLeave", function()
+      UpdateModeButtons()
+    end)
+
+    table.insert(modeButtons, btn)
+  end
+
   -- Tab buttons
-  local tabY = -64
+  local tabY = -94
   local tabWidth = math.floor((FRAME_WIDTH - 20) / #TABS)
   for i, tab in ipairs(TABS) do
     local btn = CreateFrame("Button", nil, f, "BackdropTemplate")
@@ -1071,6 +1138,7 @@ function ns.ToggleMainFrame()
   if ns.db then
     selectedTrackIndex = ns.db.selectedTrackIndex or 4
     selectedTab = ns.db.selectedTab or "gear"
+    selectedMode = ns.db.selectedMode or "mythicplus"
     selectedSpecID = ns.db.selectedSpecID
   end
 
@@ -1094,6 +1162,7 @@ function ns.ToggleMainFrame()
   UIDropDownMenu_SetText(tierDropdown, L["TRACK_" .. UPGRADE_TRACKS[selectedTrackIndex].key])
 
   UpdateTabButtons()
+  UpdateModeButtons()
   mainFrame:Show()
   PopulateContent()
 end

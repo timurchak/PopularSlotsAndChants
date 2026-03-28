@@ -25,4 +25,6 @@ ns.Locale:AddTranslations("enUS", {
   EXPORT_TO_BGC = "Export to BGC",
   EXPORT_SUCCESS = "Weights exported to BetterGearCompare profile \"%s\".",
   EXPORT_NO_BGC = "BetterGearCompare addon not found.",
+  MODE_MYTHICPLUS = "Mythic+",
+  MODE_RAID = "Raid",
 })

@@ -14,9 +14,9 @@ from archon_common import fetch_archon_page, get_slot_name, parse_icon, parse_po
 TOP_N = 3
 
 
-def fetch_gear(spec_slug: str, class_slug: str) -> dict[str, list[dict]]:
+def fetch_gear(spec_slug: str, class_slug: str, mode: str = "mythicplus") -> dict[str, list[dict]]:
     """Return top items per slot: {slot: [{id, name, popularity}, ...]}."""
-    sections = fetch_archon_page(spec_slug, class_slug, "gear-and-tier-set")
+    sections = fetch_archon_page(spec_slug, class_slug, "gear-and-tier-set", mode)
 
     # Find the section with gear tables
     gear_tables = None

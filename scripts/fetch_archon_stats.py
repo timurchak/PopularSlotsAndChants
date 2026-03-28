@@ -12,9 +12,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from archon_common import fetch_archon_page
 
 
-def fetch_stats(spec_slug: str, class_slug: str) -> list[dict]:
+def fetch_stats(spec_slug: str, class_slug: str, mode: str = "mythicplus") -> list[dict]:
     """Return stat priorities from the overview page."""
-    sections = fetch_archon_page(spec_slug, class_slug, "overview")
+    sections = fetch_archon_page(spec_slug, class_slug, "overview", mode)
 
     for section in sections:
         props = section.get("props", {})

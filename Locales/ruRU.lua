@@ -25,4 +25,6 @@ ns.Locale:AddTranslations("ruRU", {
   EXPORT_TO_BGC = "Экспорт в BGC",
   EXPORT_SUCCESS = "Веса экспортированы в профиль BetterGearCompare \"%s\".",
   EXPORT_NO_BGC = "Аддон BetterGearCompare не найден.",
+  MODE_MYTHICPLUS = "Мифик+",
+  MODE_RAID = "Рейд",
 })

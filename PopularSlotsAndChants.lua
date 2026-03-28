@@ -6,6 +6,7 @@ local defaults = {
   selectedSpecID = nil,
   selectedTrackIndex = 4,
   selectedTab = "gear",
+  selectedMode = "mythicplus",
   windowPoint = nil,
   minimapAngle = 225,
 }
