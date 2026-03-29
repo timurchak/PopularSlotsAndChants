@@ -55,8 +55,8 @@ local function GetOrCreateTalentRow(parent, index)
   end)
   row.copyBtn = copyBtn
 
-  -- Open Talents button
-  local openBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
+  -- Open Talents button (secure to avoid taint)
+  local openBtn = CreateFrame("Button", nil, row, "SecureActionButtonTemplate, BackdropTemplate")
   openBtn:SetSize(90, 22)
   openBtn:SetPoint("LEFT", copyBtn, "RIGHT", 6, 0)
   openBtn:SetBackdrop({
@@ -66,6 +66,8 @@ local function GetOrCreateTalentRow(parent, index)
   })
   openBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
   openBtn:SetBackdropBorderColor(0.2, 0.8, 0.2, 0.6)
+  openBtn:SetAttribute("type", "macro")
+  openBtn:SetAttribute("macrotext", "/click PlayerSpellsMicroButton")
   local openText = openBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   openText:SetPoint("CENTER")
   openText:SetText(L["OPEN_TALENTS"])
@@ -134,12 +136,6 @@ function UI.PopulateTalents(content, contentWidth, specData)
     local exportCode = build.exportCode
     row.copyBtn:SetScript("OnClick", function()
       ShowCopyPopup(exportCode)
-    end)
-
-    row.openBtn:SetScript("OnClick", function()
-      if not PlayerSpellsFrame or not PlayerSpellsFrame:IsShown() then
-        TogglePlayerSpellsFrame(PlayerSpellsUtil.FrameTabs.ClassTalents)
-      end
     end)
 
     row:Show()
