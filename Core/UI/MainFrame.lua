@@ -4,18 +4,24 @@ local L = ns.L
 local UI = ns.UI
 
 local function PopulateContent()
-  if not UI.mainFrame or not UI.mainFrame:IsShown() then return end
+  if not UI.mainFrame or not UI.mainFrame:IsShown() then
+    return
+  end
 
   UI.HideAll()
   UI.pendingItems = {}
 
   local data = ns.ArchonData
-  if not data or not data.specs then return end
+  if not data or not data.specs then
+    return
+  end
 
   local slug = data.specIDs and data.specIDs[UI.selectedSpecID]
   local specEntry = slug and data.specs[slug]
   local specData = specEntry and specEntry[UI.selectedMode]
-  if not specData then return end
+  if not specData then
+    return
+  end
 
   local content = UI.scrollArea.content
   local contentWidth = UI.scrollArea:GetWidth()
@@ -62,7 +68,9 @@ end
 
 local function SelectMode(modeKey)
   UI.selectedMode = modeKey
-  if ns.db then ns.db.selectedMode = modeKey end
+  if ns.db then
+    ns.db.selectedMode = modeKey
+  end
   UpdateModeButtons()
   PopulateContent()
 end
@@ -85,7 +93,9 @@ end
 
 local function SelectTab(tabKey)
   UI.selectedTab = tabKey
-  if ns.db then ns.db.selectedTab = tabKey end
+  if ns.db then
+    ns.db.selectedTab = tabKey
+  end
   UpdateTabButtons()
   PopulateContent()
 end
@@ -94,7 +104,9 @@ end
 
 local function BuildSpecEntries()
   local data = ns.ArchonData
-  if not data or not data.specIDs then return {} end
+  if not data or not data.specIDs then
+    return {}
+  end
 
   local entries = {}
   for specID, slug in pairs(data.specIDs) do
@@ -241,8 +253,13 @@ local function CreateMainFrame()
       info.checked = (entry.specID == UI.selectedSpecID)
       info.func = function(self)
         UI.selectedSpecID = self.value
-        if ns.db then ns.db.selectedSpecID = UI.selectedSpecID end
-        UIDropDownMenu_SetText(UI.specDropdown, UI.GetSpecDisplayName(UI.selectedSpecID, ns.ArchonData.specIDs[UI.selectedSpecID]))
+        if ns.db then
+          ns.db.selectedSpecID = UI.selectedSpecID
+        end
+        UIDropDownMenu_SetText(
+          UI.specDropdown,
+          UI.GetSpecDisplayName(UI.selectedSpecID, ns.ArchonData.specIDs[UI.selectedSpecID])
+        )
         UI.pendingItems = {}
         PopulateContent()
       end
@@ -263,7 +280,9 @@ local function CreateMainFrame()
       info.checked = (trackIdx == UI.selectedTrackIndex)
       info.func = function(self)
         UI.selectedTrackIndex = self.value
-        if ns.db then ns.db.selectedTrackIndex = UI.selectedTrackIndex end
+        if ns.db then
+          ns.db.selectedTrackIndex = UI.selectedTrackIndex
+        end
         UIDropDownMenu_SetText(UI.tierDropdown, L["TRACK_" .. UI.UPGRADE_TRACKS[UI.selectedTrackIndex].key])
         UI.pendingItems = {}
         PopulateContent()
@@ -389,15 +408,15 @@ function ns.ToggleMainFrame()
 
   -- Fallback to first available spec
   if not UI.selectedSpecID and ns.ArchonData and ns.ArchonData.specIDs then
-    for specID in pairs(ns.ArchonData.specIDs) do
-      UI.selectedSpecID = specID
-      break
-    end
+    UI.selectedSpecID = next(ns.ArchonData.specIDs)
   end
 
   -- Update dropdown texts
   if UI.selectedSpecID and ns.ArchonData then
-    UIDropDownMenu_SetText(UI.specDropdown, UI.GetSpecDisplayName(UI.selectedSpecID, ns.ArchonData.specIDs[UI.selectedSpecID]))
+    UIDropDownMenu_SetText(
+      UI.specDropdown,
+      UI.GetSpecDisplayName(UI.selectedSpecID, ns.ArchonData.specIDs[UI.selectedSpecID])
+    )
   end
   UIDropDownMenu_SetText(UI.tierDropdown, L["TRACK_" .. UI.UPGRADE_TRACKS[UI.selectedTrackIndex].key])
 

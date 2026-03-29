@@ -4,7 +4,9 @@ local L = ns.L
 local UI = ns.UI
 
 local function GetOrCreateStatRow(parent, index)
-  if UI.statRowPool[index] then return UI.statRowPool[index] end
+  if UI.statRowPool[index] then
+    return UI.statRowPool[index]
+  end
 
   local row = CreateFrame("Frame", nil, parent)
   row:SetHeight(UI.STAT_ROW_HEIGHT)
@@ -52,6 +54,11 @@ local function ConvertArchonWeights(statsData)
   return weights
 end
 
+local function StatLabel(statName)
+  local key = UI.STAT_L10N[statName]
+  return key and L[key] or statName
+end
+
 function UI.PopulateStats(content, contentWidth, specData)
   local yOffset = 0
   local headerIndex = 0
@@ -64,23 +71,27 @@ function UI.PopulateStats(content, contentWidth, specData)
   local header = UI.GetOrCreateHeader(content, headerIndex)
   header:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
   header:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-  header.text:SetText("Stat Priority")
+  header.text:SetText(L["HEADER_STAT_PRIORITY"])
   header:Show()
   yOffset = yOffset + UI.HEADER_HEIGHT
 
   local maxValue = 0
   for _, stat in ipairs(specData.stats) do
     local w = stat.order == 1 and 1000 or stat.value
-    if w > maxValue then maxValue = w end
+    if w > maxValue then
+      maxValue = w
+    end
   end
-  if maxValue == 0 then maxValue = 1 end
+  if maxValue == 0 then
+    maxValue = 1
+  end
 
   for i, stat in ipairs(specData.stats) do
     local row = GetOrCreateStatRow(content, i)
     row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
     row:SetPoint("RIGHT", content, "RIGHT", 0, 0)
 
-    row.nameText:SetText(stat.name)
+    row.nameText:SetText(StatLabel(stat.name))
 
     local weight
     if stat.order == 1 then

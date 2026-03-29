@@ -4,11 +4,13 @@ local L = ns.L
 local UI = ns.UI
 
 local function ShowCopyPopup(exportCode)
-  StaticPopup_Show("PSC_COPY_EXPORT", nil, nil, exportCode)
+  StaticPopup_Show("PSC_COPY_EXPORT", L["POPUP_COPY_EXPORT"], nil, exportCode)
 end
 
 local function GetOrCreateTalentRow(parent, index)
-  if UI.talentRowPool[index] then return UI.talentRowPool[index] end
+  if UI.talentRowPool[index] then
+    return UI.talentRowPool[index]
+  end
 
   local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
   row:SetHeight(UI.TALENT_ROW_HEIGHT)
@@ -55,31 +57,6 @@ local function GetOrCreateTalentRow(parent, index)
   end)
   row.copyBtn = copyBtn
 
-  -- Open Talents button (secure to avoid taint)
-  local openBtn = CreateFrame("Button", nil, row, "SecureActionButtonTemplate, BackdropTemplate")
-  openBtn:SetSize(90, 22)
-  openBtn:SetPoint("LEFT", copyBtn, "RIGHT", 6, 0)
-  openBtn:SetBackdrop({
-    bgFile = "Interface/Buttons/WHITE8X8",
-    edgeFile = "Interface/Buttons/WHITE8X8",
-    edgeSize = 1,
-  })
-  openBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
-  openBtn:SetBackdropBorderColor(0.2, 0.8, 0.2, 0.6)
-  openBtn:SetAttribute("type", "macro")
-  openBtn:SetAttribute("macrotext", "/click PlayerSpellsMicroButton")
-  local openText = openBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-  openText:SetPoint("CENTER")
-  openText:SetText(L["OPEN_TALENTS"])
-  openText:SetTextColor(0.2, 1, 0.2)
-  openBtn:SetScript("OnEnter", function(self)
-    self:SetBackdropColor(0.2, 0.5, 0.2, 1)
-  end)
-  openBtn:SetScript("OnLeave", function(self)
-    self:SetBackdropColor(0.15, 0.35, 0.15, 1)
-  end)
-  row.openBtn = openBtn
-
   UI.talentRowPool[index] = row
   return row
 end
@@ -102,7 +79,7 @@ function UI.PopulateTalents(content, contentWidth, specData)
     for _, ht in ipairs(specData.talents.heroTrees) do
       table.insert(names, ht.name .. " (#" .. ht.rank .. ")")
     end
-    header.text:SetText("Hero Trees: " .. table.concat(names, ", "))
+    header.text:SetText(L["HEADER_HERO_TREES"] .. " " .. table.concat(names, ", "))
     header:Show()
     yOffset = yOffset + UI.HEADER_HEIGHT
   end
@@ -112,7 +89,7 @@ function UI.PopulateTalents(content, contentWidth, specData)
   local header = UI.GetOrCreateHeader(content, headerIndex)
   header:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
   header:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-  header.text:SetText("Talent Builds")
+  header.text:SetText(L["HEADER_TALENT_BUILDS"])
   header:Show()
   yOffset = yOffset + UI.HEADER_HEIGHT
 
@@ -121,7 +98,7 @@ function UI.PopulateTalents(content, contentWidth, specData)
     row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
     row:SetPoint("RIGHT", content, "RIGHT", 0, 0)
 
-    local titleStr = build.title or ("Build #" .. i)
+    local titleStr = build.title or string.format(L["BUILD_NUMBER"], i)
     row.titleText:SetText(titleStr)
 
     if build.heroTree and build.heroTree ~= "" then

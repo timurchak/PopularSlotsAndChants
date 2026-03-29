@@ -3,6 +3,16 @@ local _, ns = ...
 local L = ns.L
 local UI = ns.UI
 
+local function SlotLabel(slotName)
+  local key = UI.SLOT_L10N[slotName]
+  return key and L[key] or slotName
+end
+
+local function ConsumableLabel(category)
+  local key = UI.CONSUMABLE_L10N[category]
+  return key and L[key] or category
+end
+
 function UI.PopulateGear(content, contentWidth, specData)
   local yOffset = 0
   local rowIndex = 0
@@ -15,7 +25,7 @@ function UI.PopulateGear(content, contentWidth, specData)
       local header = UI.GetOrCreateHeader(content, headerIndex)
       header:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
       header:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-      header.text:SetText(slotName)
+      header.text:SetText(SlotLabel(slotName))
       header:Show()
       yOffset = yOffset + UI.HEADER_HEIGHT
 
@@ -46,7 +56,7 @@ function UI.PopulateEnchants(content, contentWidth, specData)
       local header = UI.GetOrCreateHeader(content, headerIndex)
       header:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
       header:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-      header.text:SetText(slotName)
+      header.text:SetText(SlotLabel(slotName))
       header:Show()
       yOffset = yOffset + UI.HEADER_HEIGHT
 
@@ -125,7 +135,7 @@ function UI.PopulateConsumables(content, contentWidth, specData)
       local header = UI.GetOrCreateHeader(content, headerIndex)
       header:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
       header:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-      header.text:SetText(category)
+      header.text:SetText(ConsumableLabel(category))
       header:Show()
       yOffset = yOffset + UI.HEADER_HEIGHT
 
@@ -147,14 +157,17 @@ function UI.PopulateConsumables(content, contentWidth, specData)
     for category, entry in pairs(specData.consumables) do
       local found = false
       for _, c in ipairs(UI.CONSUMABLE_ORDER) do
-        if c == category then found = true; break end
+        if c == category then
+          found = true
+          break
+        end
       end
       if not found then
         headerIndex = headerIndex + 1
         local header = UI.GetOrCreateHeader(content, headerIndex)
         header:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -yOffset)
         header:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-        header.text:SetText(category)
+        header.text:SetText(ConsumableLabel(category))
         header:Show()
         yOffset = yOffset + UI.HEADER_HEIGHT
 

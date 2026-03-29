@@ -5,7 +5,7 @@ local UI = ns.UI
 
 -- Copy popup dialog
 StaticPopupDialogs["PSC_COPY_EXPORT"] = {
-  text = "Copy talent export string:",
+  text = "%s",
   button1 = CLOSE or "Close",
   hasEditBox = true,
   editBoxWidth = 350,
@@ -46,12 +46,16 @@ function UI.GetSpecDisplayName(specID, slug)
   if UI.SPEC_NAMES[specID] then
     return UI.SPEC_NAMES[specID]
   end
-  if not slug then return tostring(specID) end
+  if not slug then
+    return tostring(specID)
+  end
   local classSlug = slug:match("^([^/]+)/")
   local specSlug = slug:match("/(.+)$")
-  if not classSlug or not specSlug then return slug end
+  if not classSlug or not specSlug then
+    return slug
+  end
 
-  local _, name, _, icon = GetSpecializationInfoByID(specID)
+  local _, name = GetSpecializationInfoByID(specID)
   if name then
     local cc = UI.GetClassColor(classSlug)
     local display = string.format("|c%s%s|r", cc.colorStr, name)
@@ -59,16 +63,22 @@ function UI.GetSpecDisplayName(specID, slug)
     return display
   end
 
-  local pretty = specSlug:gsub("-", " "):gsub("(%a)([%w_']*)", function(a, b) return a:upper() .. b end)
+  local pretty = specSlug:gsub("-", " "):gsub("(%a)([%w_']*)", function(a, b)
+    return a:upper() .. b
+  end)
   UI.SPEC_NAMES[specID] = pretty
   return pretty
 end
 
 function UI.GetCurrentSpecSlug()
   local specIndex = GetSpecialization()
-  if not specIndex then return nil end
+  if not specIndex then
+    return nil
+  end
   local specID = GetSpecializationInfo(specIndex)
-  if not specID then return nil end
+  if not specID then
+    return nil
+  end
   local data = ns.ArchonData
   if data and data.specIDs and data.specIDs[specID] then
     return specID
@@ -79,7 +89,9 @@ end
 -- Row/Header pool
 
 function UI.GetOrCreateHeader(parent, index)
-  if UI.headerPool[index] then return UI.headerPool[index] end
+  if UI.headerPool[index] then
+    return UI.headerPool[index]
+  end
 
   local header = CreateFrame("Frame", nil, parent)
   header:SetHeight(UI.HEADER_HEIGHT)
@@ -100,7 +112,9 @@ function UI.GetOrCreateHeader(parent, index)
 end
 
 function UI.GetOrCreateRow(parent, index)
-  if UI.rowPool[index] then return UI.rowPool[index] end
+  if UI.rowPool[index] then
+    return UI.rowPool[index]
+  end
 
   local row = CreateFrame("Frame", nil, parent)
   row:SetHeight(UI.ROW_HEIGHT)
@@ -150,11 +164,21 @@ function UI.GetOrCreateRow(parent, index)
 end
 
 function UI.HideAll()
-  for _, row in pairs(UI.rowPool) do row:Hide() end
-  for _, header in pairs(UI.headerPool) do header:Hide() end
-  for _, row in pairs(UI.talentRowPool) do row:Hide() end
-  for _, row in pairs(UI.statRowPool) do row:Hide() end
-  if UI.exportBGCBtn then UI.exportBGCBtn:Hide() end
+  for _, row in pairs(UI.rowPool) do
+    row:Hide()
+  end
+  for _, header in pairs(UI.headerPool) do
+    header:Hide()
+  end
+  for _, row in pairs(UI.talentRowPool) do
+    row:Hide()
+  end
+  for _, row in pairs(UI.statRowPool) do
+    row:Hide()
+  end
+  if UI.exportBGCBtn then
+    UI.exportBGCBtn:Hide()
+  end
 end
 
 function UI.SetupItemRow(row, itemID, popularity, useTrack)
