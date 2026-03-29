@@ -11,8 +11,11 @@ externals:
 ignore:
   - .github
   - .gitignore
+  - .luacheckrc
+  - stylua.toml
   - README.md
   - CURSE.md
+  - CLAUDE.md
   - .pkgmeta
   - Image.png
   - scripts
