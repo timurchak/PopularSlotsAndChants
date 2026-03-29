@@ -377,12 +377,14 @@ function ns.ToggleMainFrame()
     UI.selectedTrackIndex = ns.db.selectedTrackIndex or 4
     UI.selectedTab = ns.db.selectedTab or "gear"
     UI.selectedMode = ns.db.selectedMode or "mythicplus"
-    UI.selectedSpecID = ns.db.selectedSpecID
   end
 
-  -- Auto-detect current spec if no saved selection
-  if not UI.selectedSpecID then
-    UI.selectedSpecID = UI.GetCurrentSpecSlug()
+  -- Always detect current spec
+  UI.selectedSpecID = UI.GetCurrentSpecSlug()
+
+  -- Fallback to saved selection
+  if not UI.selectedSpecID and ns.db then
+    UI.selectedSpecID = ns.db.selectedSpecID
   end
 
   -- Fallback to first available spec
