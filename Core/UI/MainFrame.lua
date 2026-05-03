@@ -205,6 +205,8 @@ local function CreateMainFrame()
   end)
   f:SetClampedToScreen(true)
 
+  tinsert(UISpecialFrames, "PopularSlotsAndChantsFrame")
+
   f:SetBackdrop({
     bgFile = "Interface/Tooltips/UI-Tooltip-Background",
     edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
