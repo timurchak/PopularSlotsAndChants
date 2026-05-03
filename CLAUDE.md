@@ -5,7 +5,7 @@ WoW Retail addon showing top-tier gear, enchants, gems, consumables, talents, an
 ## Tech Stack
 
 - **Lua 5.1** (WoW runtime) — no Lua 5.2+ features (no `goto`, no `table.unpack` without compat)
-- **WoW API** — Blizzard's frame/widget system, C_ namespaced APIs
+- **WoW API** — Blizzard's frame/widget system, C_ namespaced APIs ("/Users/timurudychak/works/WoW/wow-ui-source")
 - **Python 3** — data generation pipeline (scripts/)
 
 ## Code Conventions
