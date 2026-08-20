@@ -48,10 +48,12 @@ read_globals = {
   -- Lua 5.1 extras provided by WoW
   "format",
   "unpack",
+  "tinsert",
 
   -- Core frame/widget API
   "CreateFrame",
   "UIParent",
+  "UISpecialFrames",
 
   -- Namespaced C_ APIs
   "C_Timer",

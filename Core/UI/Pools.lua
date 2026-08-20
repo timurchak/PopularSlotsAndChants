@@ -3,6 +3,9 @@ local _, ns = ...
 local L = ns.L
 local UI = ns.UI
 
+local MESSAGE_INSET = 20
+local MESSAGE_TOP_OFFSET = 40
+
 -- Copy popup dialog
 StaticPopupDialogs["PSC_COPY_EXPORT"] = {
   text = "%s",
@@ -163,7 +166,36 @@ function UI.GetOrCreateRow(parent, index)
   return row
 end
 
+-- Centered placeholder message (empty spec/mode data)
+
+function UI.GetOrCreateMessage(parent)
+  if UI.messageLabel then
+    return UI.messageLabel
+  end
+
+  local text = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  text:SetPoint("TOPLEFT", parent, "TOPLEFT", MESSAGE_INSET, -MESSAGE_TOP_OFFSET)
+  text:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -MESSAGE_INSET, -MESSAGE_TOP_OFFSET)
+  text:SetJustifyH("CENTER")
+  text:SetJustifyV("TOP")
+  text:SetWordWrap(true)
+  text:SetTextColor(0.6, 0.6, 0.6)
+
+  UI.messageLabel = text
+  return text
+end
+
+function UI.ShowMessage(parent, message)
+  local label = UI.GetOrCreateMessage(parent)
+  label:SetText(message)
+  label:Show()
+  return MESSAGE_TOP_OFFSET + label:GetStringHeight() + MESSAGE_INSET
+end
+
 function UI.HideAll()
+  if UI.messageLabel then
+    UI.messageLabel:Hide()
+  end
   for _, row in pairs(UI.rowPool) do
     row:Hide()
   end

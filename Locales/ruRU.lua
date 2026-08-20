@@ -16,6 +16,7 @@ ns.Locale:AddTranslations("ruRU", {
   HEADER_EPIC_GEMS = "Эпические камни",
   HEADER_GEMS = "Камни",
   NO_DATA = "Нет данных для этой специализации.",
+  RAID_COMING_SOON = "Данные по рейду пока недоступны.\n\nArchon.gg публикует статистику рейда после открытия крыла, когда наберётся достаточно логов. Заходите позже.",
   COPY_EXPORT = "Копировать",
   HERO_TREE = "Герой: %s",
   SOURCE_LABEL = "Источник: Archon.gg",

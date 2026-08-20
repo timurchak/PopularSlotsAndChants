@@ -165,6 +165,7 @@ UI.headerPool = {}
 UI.talentRowPool = {}
 UI.statRowPool = {}
 UI.pendingItems = {}
+UI.messageLabel = nil
 UI.tabButtons = {}
 UI.modeButtons = {}
 UI.exportBGCBtn = nil

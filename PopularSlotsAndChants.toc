@@ -1,8 +1,8 @@
-## Interface: 120007, 120005, 120001, 120000
+## Interface: 120100, 120007, 120005, 120001, 120000
 ## Title: Popular Slots & Chants
 ## Notes: Shows popular gear, enchants, gems and consumables from Archon.gg
 ## Author: timurchak
-## Version: 1.1.9
+## Version: 1.2.0
 ## SavedVariables: PopularSlotsAndChantsDB
 ## IconTexture: Interface\AddOns\PopularSlotsAndChants\Media\icon
 ## X-Curse-Project-ID: 1497125

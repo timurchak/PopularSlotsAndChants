@@ -3,6 +3,25 @@ local _, ns = ...
 local L = ns.L
 local UI = ns.UI
 
+-- False when Archon has not published data for this mode yet (e.g. a raid tier
+-- that has not opened). The generator omits the mode key entirely in that case.
+local function hasModeData(specData)
+  return specData ~= nil and next(specData.gear or {}) ~= nil
+end
+
+local function RefreshScrollBar()
+  C_Timer.After(0, function()
+    if UI.scrollArea and UI.scrollArea.UpdateScrollBar then
+      UI.scrollArea.UpdateScrollBar()
+    end
+  end)
+end
+
+local function ShowPlaceholder(content, message)
+  content:SetHeight(math.max(UI.ShowMessage(content, message), 1))
+  RefreshScrollBar()
+end
+
 local function PopulateContent()
   if not UI.mainFrame or not UI.mainFrame:IsShown() then
     return
@@ -11,20 +30,24 @@ local function PopulateContent()
   UI.HideAll()
   UI.pendingItems = {}
 
+  local content = UI.scrollArea.content
+  local contentWidth = UI.scrollArea:GetWidth()
+
   local data = ns.ArchonData
   if not data or not data.specs then
+    ShowPlaceholder(content, L["NO_DATA"])
     return
   end
 
   local slug = data.specIDs and data.specIDs[UI.selectedSpecID]
   local specEntry = slug and data.specs[slug]
   local specData = specEntry and specEntry[UI.selectedMode]
-  if not specData then
+
+  if not hasModeData(specData) then
+    ShowPlaceholder(content, UI.selectedMode == "raid" and L["RAID_COMING_SOON"] or L["NO_DATA"])
     return
   end
 
-  local content = UI.scrollArea.content
-  local contentWidth = UI.scrollArea:GetWidth()
   local yOffset = 0
 
   if UI.selectedTab == "gear" then
@@ -43,11 +66,7 @@ local function PopulateContent()
 
   content:SetHeight(math.max(yOffset, 1))
 
-  C_Timer.After(0, function()
-    if UI.scrollArea.UpdateScrollBar then
-      UI.scrollArea.UpdateScrollBar()
-    end
-  end)
+  RefreshScrollBar()
 end
 
 -- Mode switching (M+ / Raid)

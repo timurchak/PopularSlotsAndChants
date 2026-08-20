@@ -16,6 +16,7 @@ ns.Locale:AddTranslations("enUS", {
   HEADER_EPIC_GEMS = "Epic Gems",
   HEADER_GEMS = "Gems",
   NO_DATA = "No data available for this spec.",
+  RAID_COMING_SOON = "Raid data is not available yet.\n\nArchon.gg publishes raid statistics once the tier opens and enough logs are collected. Check back later.",
   COPY_EXPORT = "Copy",
   HERO_TREE = "Hero: %s",
   SOURCE_LABEL = "Source: Archon.gg",
