@@ -22,21 +22,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Generate and validate Archon data
-        run: |
-          python3 scripts/generate_lua.py
-          python3 scripts/validate_generated_lua.py
-
-      - name: Commit generated data and update tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add PopularSlotsAndChants_Data.lua
-          if ! git diff --cached --quiet; then
-            git commit -m "Update generated Archon data"
-            TAG_NAME="${GITHUB_REF#refs/tags/}"
-            git tag -f "$TAG_NAME"
-          fi
+      - name: Validate generated Archon data
+        run: python3 scripts/validate_generated_lua.py --max-age-hours 24
 
       - name: Package and Upload
         uses: BigWigsMods/packager@master

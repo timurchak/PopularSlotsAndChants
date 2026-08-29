@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import re
+from datetime import datetime, timezone
 from pathlib import Path
 
 from archon_common import GAME_MODES, SPEC_ID_BY_SLUG
@@ -23,6 +25,12 @@ MODE_FIELDS = (
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate generated Archon Lua data.")
     parser.add_argument("path", type=Path, nargs="?", default=DEFAULT_INPUT)
+    parser.add_argument(
+        "--max-age-hours",
+        type=float,
+        default=None,
+        help="Reject data older than this many hours.",
+    )
     return parser.parse_args()
 
 
@@ -36,6 +44,23 @@ def main() -> int:
     expected_specs = len(SPEC_ID_BY_SLUG)
     expected_mode_results = expected_specs * len(GAME_MODES)
     errors: list[str] = []
+
+    generated_at_match = re.search(
+        r'\["generatedAtUtc"\] = "([^"]+)"',
+        lua_content,
+    )
+    if not generated_at_match:
+        errors.append("generatedAtUtc is missing")
+    elif args.max_age_hours is not None:
+        generated_at = datetime.fromisoformat(generated_at_match.group(1))
+        age_hours = (datetime.now(timezone.utc) - generated_at).total_seconds() / 3600
+        if age_hours < -0.25:
+            errors.append(f"generatedAtUtc is {-age_hours:.1f} hours in the future")
+        elif age_hours > args.max_age_hours:
+            errors.append(
+                f"generated data is {age_hours:.1f} hours old; "
+                f"maximum is {args.max_age_hours:g}"
+            )
 
     for mode in GAME_MODES:
         actual = count_key(lua_content, mode)
