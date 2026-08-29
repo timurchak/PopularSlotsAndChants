@@ -20,6 +20,14 @@ from fetch_archon_talents import fetch_talents
 
 DEFAULT_OUTPUT = Path(__file__).resolve().parent.parent / "PopularSlotsAndChants_Data.lua"
 REQUEST_DELAY = 0.5  # seconds between HTTP requests
+REQUIRED_NON_EMPTY_FIELDS = (
+    "gear",
+    "enchants",
+    "epicGems",
+    "gems",
+    "consumables",
+    "stats",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -72,6 +80,17 @@ def fetch_mode_data(spec_slug: str, class_slug: str, mode: str) -> dict:
     }
 
 
+def validate_mode_data(data: dict) -> None:
+    """Reject incomplete results before they can reach the generated addon data."""
+    empty_fields = [field for field in REQUIRED_NON_EMPTY_FIELDS if not data.get(field)]
+    talents = data.get("talents")
+    if not isinstance(talents, dict) or not talents.get("builds"):
+        empty_fields.append("talents.builds")
+
+    if empty_fields:
+        raise RuntimeError(f"Incomplete Archon data: empty {', '.join(empty_fields)}")
+
+
 def main() -> int:
     args = parse_args()
 
@@ -106,6 +125,7 @@ def main() -> int:
 
             try:
                 mode_data = fetch_mode_data(spec_slug, class_slug, mode)
+                validate_mode_data(mode_data)
             except Exception as e:
                 print(f"  ERROR: {e}", file=sys.stderr)
                 failed += 1
@@ -118,6 +138,26 @@ def main() -> int:
                   f"{len(md['consumables'])} consumables, "
                   f"{len(md['talents'].get('builds', []))} talent builds, "
                   f"{len(md['stats'])} stats")
+
+    missing_results = [
+        f"{slug}/{mode}"
+        for slug in slugs
+        for mode in modes
+        if mode not in specs.get(slug, {})
+    ]
+    summary = {
+        "output": str(args.output),
+        "specCount": len(specs),
+        "modes": modes,
+        "failed": failed,
+        "missingResults": missing_results,
+    }
+
+    if failed or missing_results:
+        summary["written"] = False
+        print(json.dumps(summary, ensure_ascii=False))
+        print("Generation failed; existing output was left unchanged.", file=sys.stderr)
+        return 1
 
     dataset = {
         "generatedAtUtc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
@@ -132,12 +172,7 @@ def main() -> int:
     )
     args.output.write_text(lua_content, encoding="utf-8")
 
-    summary = {
-        "output": str(args.output),
-        "specCount": len(specs),
-        "modes": modes,
-        "failed": failed,
-    }
+    summary["written"] = True
     print(json.dumps(summary, ensure_ascii=False))
     return 0
 

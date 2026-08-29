@@ -5,13 +5,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
-import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from archon_common import ARCHON_BASE, archon_url, parse_popularity
+from archon_common import archon_url, fetch_archon_next_data, parse_popularity
 
 TOP_N = 3
 
@@ -19,24 +17,7 @@ TOP_N = 3
 def fetch_talents(spec_slug: str, class_slug: str, mode: str = "mythicplus") -> dict:
     """Return talent builds with export strings and hero tree info."""
     url = archon_url(spec_slug, class_slug, "talents", mode)
-    proc = subprocess.run(
-        [
-            "curl", "-s",
-            "-H", "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "-H", "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            url,
-        ],
-        capture_output=True, text=True, timeout=30,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError(f"curl failed for {url}: {proc.stderr}")
-
-    match = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', proc.stdout, re.DOTALL)
-    if not match:
-        raise RuntimeError(f"No __NEXT_DATA__ found in {url}")
-
-    parsed = json.loads(match.group(1))
+    parsed = fetch_archon_next_data(url)
     page = parsed["props"]["pageProps"]["page"]
 
     result = {"heroTrees": [], "builds": []}

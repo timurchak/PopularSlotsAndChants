@@ -5,6 +5,9 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import tempfile
+from html import unescape
+from pathlib import Path
 from typing import Any
 
 
@@ -53,6 +56,16 @@ SPEC_ID_BY_SLUG = {
 }
 
 ARCHON_BASE = "https://www.archon.gg/wow/builds"
+ARCHON_ORIGIN = "https://www.archon.gg"
+
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+ACCEPT_HEADER = "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+
+_SESSION_DIR = tempfile.TemporaryDirectory(prefix="popular-slots-archon-")
+_COOKIE_JAR = Path(_SESSION_DIR.name) / "cookies.txt"
 
 GAME_MODES = {
     "mythicplus": {"path": "mythic-plus", "suffix": "10/all-dungeons/this-week"},
@@ -66,30 +79,87 @@ def archon_url(spec_slug: str, class_slug: str, page_type: str, mode: str = "myt
     return f"{ARCHON_BASE}/{spec_slug}/{class_slug}/{m['path']}/{page_type}/{m['suffix']}"
 
 
-def fetch_archon_page(spec_slug: str, class_slug: str, page_type: str, mode: str = "mythicplus") -> list[dict]:
-    """Fetch an Archon.gg page and return its sections from __NEXT_DATA__."""
-    url = archon_url(spec_slug, class_slug, page_type, mode)
+def _curl_html(url: str, extra_args: list[str] | None = None) -> str:
+    """Fetch HTML with the shared Archon cookie jar."""
+    command = [
+        "curl",
+        "-sS",
+        "--compressed",
+        "--fail-with-body",
+        "-A",
+        USER_AGENT,
+        "-H",
+        ACCEPT_HEADER,
+        "-b",
+        str(_COOKIE_JAR),
+        "-c",
+        str(_COOKIE_JAR),
+    ]
+    if extra_args:
+        command.extend(extra_args)
+    command.append(url)
+
     result = subprocess.run(
-        [
-            "curl", "-s",
-            "-H", "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "-H", "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            url,
-        ],
+        command,
         capture_output=True,
         text=True,
         timeout=30,
     )
     if result.returncode != 0:
         raise RuntimeError(f"curl failed for {url}: {result.stderr}")
+    return result.stdout
 
-    html = result.stdout
-    match = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', html, re.DOTALL)
+
+def _challenge_fields(html_text: str) -> dict[str, str]:
+    """Extract the signed fields from Archon's human verification form."""
+    fields: dict[str, str] = {}
+    for input_tag in re.findall(r"<input\b[^>]*>", html_text, re.IGNORECASE):
+        attributes = dict(re.findall(r'(\w+)="([^"]*)"', input_tag))
+        name = attributes.get("name")
+        if name in {"intendedUrl", "expiresAt", "signature"}:
+            fields[name] = unescape(attributes.get("value", ""))
+    return fields
+
+
+def fetch_archon_next_data(url: str) -> dict:
+    """Fetch an Archon page and return its parsed __NEXT_DATA__ payload."""
+    html_text = _curl_html(url)
+
+    if "Human Verification" in html_text:
+        fields = _challenge_fields(html_text)
+        required_fields = {"intendedUrl", "expiresAt", "signature"}
+        if fields.keys() < required_fields:
+            raise RuntimeError(f"Incomplete human verification form in {url}")
+
+        html_text = _curl_html(
+            f"{ARCHON_ORIGIN}/human-challenge",
+            [
+                "-L",
+                "-e",
+                url,
+                "-H",
+                f"Origin: {ARCHON_ORIGIN}",
+                "--data-urlencode",
+                f"intendedUrl={fields['intendedUrl']}",
+                "--data-urlencode",
+                f"expiresAt={fields['expiresAt']}",
+                "--data-urlencode",
+                f"signature={fields['signature']}",
+            ],
+        )
+
+    match = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', html_text, re.DOTALL)
     if not match:
         raise RuntimeError(f"No __NEXT_DATA__ found in {url}")
 
-    parsed = json.loads(match.group(1))
+    return json.loads(match.group(1))
+
+
+def fetch_archon_page(spec_slug: str, class_slug: str, page_type: str, mode: str = "mythicplus") -> list[dict]:
+    """Fetch an Archon.gg page and return its sections from __NEXT_DATA__."""
+    url = archon_url(spec_slug, class_slug, page_type, mode)
+    parsed = fetch_archon_next_data(url)
+
     return parsed["props"]["pageProps"]["page"]["sections"]
 
 

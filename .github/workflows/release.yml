@@ -22,8 +22,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Generate Archon data
-        run: python3 scripts/generate_lua.py
+      - name: Generate and validate Archon data
+        run: |
+          python3 scripts/generate_lua.py
+          python3 scripts/validate_generated_lua.py
 
       - name: Commit generated data and update tag
         run: |
